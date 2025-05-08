@@ -22,51 +22,17 @@ concurrency:
 jobs:
   build_wheels:
     name: Build Wheel
-    runs-on: flash
+    runs-on: depot-ubuntu-latest-64
     env:
       FLASH_ATTENTION_VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.FLASH_ATTENTION_VERSION || '98edb0d29bb1db336fef845fb5fd49bc98b04b96' }}
 
     strategy:
       fail-fast: false
       matrix:
-        include:
-          # - torch-version: "2.5.1"
-          #   python-version: "3.9"
-          #   cuda-version: "12.4.0"
-          #   cxx11abi: FALSE
-          # - torch-version: "2.5.1"
-          #   python-version: "3.10"
-          #   cuda-version: "12.4.0"
-          #   cxx11abi: FALSE
-          # - torch-version: "2.5.1"
-          #   python-version: "3.11"
-          #   cuda-version: "12.4.0"
-          #   cxx11abi: FALSE
-          # - torch-version: "2.5.1"
-          #   python-version: "3.12"
-          #   cuda-version: "12.4.0"
-          #   cxx11abi: FALSE
-
-          # - torch-version: "2.6.0"
-          #   python-version: "3.9"
-          #   cuda-version: "12.4.0"
-          #   cxx11abi: FALSE
-          # - torch-version: "2.6.0"
-          #   python-version: "3.10"
-          #   cuda-version: "12.4.0"
-          #   cxx11abi: FALSE
-          # - torch-version: "2.6.0"
-          #   python-version: "3.11"
-          #   cuda-version: "12.4.0"
-          #   cxx11abi: FALSE
-          # - torch-version: "2.6.0"
-          #   python-version: "3.12"
-          #   cuda-version: "12.4.0"
-          #   cxx11abi: FALSE
-          - torch-version: "2.6.0"
-            python-version: "3.12"
-            cuda-version: "12.8.1"
-            cxx11abi: FALSE
+        python-version: ['3.10', '3.11', '3.12']
+        torch-version: ['2.4.0', '2.5.1', '2.6.0', '2.7.0']
+        cuda-version: ['12.8.1']
+        cxx11_abi: ['FALSE']
 
     steps:
       - name: Checkout Flash Attention
@@ -142,11 +108,7 @@ jobs:
       - name: Build wheel
         working-directory: ./hopper
         run: |
-          # We want setuptools >= 49.6.0 otherwise we can't compile the extension if system CUDA version is 11.7 and pytorch cuda version is 11.6
-          # https://github.com/pytorch/pytorch/blob/664058fa83f1d8eede5d66418abff6e20bd76ca8/torch/utils/cpp_extension.py#L810
-          # However this still fails so I'm using a newer version of setuptools
-          pip install setuptools==75.8.0
-          pip install ninja packaging wheel
+          pip install setuptools ninja packaging wheel
           export PATH=/usr/local/nvidia/bin:/usr/local/nvidia/lib64:$PATH
           export LD_LIBRARY_PATH=/usr/local/nvidia/lib64:/usr/local/cuda/lib64:$LD_LIBRARY_PATH
           # Limit MAX_JOBS otherwise the github runner goes OOM
