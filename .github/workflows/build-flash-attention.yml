@@ -1,17 +1,13 @@
-name: Release
-
-permissions:
-  contents: write
+name: FlashAttention
 
 on:
   workflow_dispatch:
     inputs:
       FLASH_ATTENTION_VERSION:
-        description: "Flash Attention version"
+        description: "FlashAttention version"
         required: true
-        default: "98edb0d29bb1db336fef845fb5fd49bc98b04b96"
+        default: "v2.7.4.post1"
         type: string
-
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.event.pull_request.number || github.sha }}
@@ -22,7 +18,7 @@ jobs:
     name: Build Wheel
     runs-on: depot-ubuntu-latest-64
     env:
-      FLASH_ATTENTION_VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.FLASH_ATTENTION_VERSION || '98edb0d29bb1db336fef845fb5fd49bc98b04b96' }}
+      FLASH_ATTENTION_VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.FLASH_ATTENTION_VERSION || 'v2.7.4.post1' }}
 
     strategy:
       fail-fast: false
@@ -149,7 +145,6 @@ jobs:
         run: ls /usr/local/cuda-12.8/include/
 
       - name: Install PyTorch ${{ matrix.torch-version }}+cu${{ matrix.cuda-version }}
-        working-directory: ./hopper
         run: |
           pip install --upgrade pip
           # With python 3.13 and torch 2.5.1, unless we update typing-extensions, we get error
@@ -173,13 +168,11 @@ jobs:
         shell: bash
 
       - name: Build wheel
-        working-directory: ./hopper
         run: |
           pip install setuptools ninja packaging wheel
           export PATH=/usr/local/nvidia/bin:/usr/local/nvidia/lib64:$PATH
           export LD_LIBRARY_PATH=/usr/local/nvidia/lib64:/usr/local/cuda/lib64:$LD_LIBRARY_PATH
           # Limit MAX_JOBS otherwise the github runner goes OOM
-          # nvcc 11.8 can compile with 2 jobs, but nvcc 12.3 goes OOM
           MAX_JOBS=16 FLASH_ATTENTION_FORCE_BUILD="TRUE" FLASH_ATTENTION_FORCE_CXX11_ABI=${{ matrix.cxx11_abi}} python setup.py bdist_wheel --dist-dir=dist
           tmpname=cu${WHEEL_CUDA_VERSION}torch${MATRIX_TORCH_VERSION}cxx11abi${{ matrix.cxx11_abi }}
           wheel_name=$(ls dist/*whl | xargs -n 1 basename | sed "s/-/+$tmpname-/2")
@@ -188,12 +181,12 @@ jobs:
 
       - name: Log Built Wheels
         run: |
-          wheel_name=$(ls hopper/dist/*whl | xargs -n 1 basename)
+          wheel_name=$(ls dist/*whl | xargs -n 1 basename)
           echo "wheel_name=${wheel_name}" >> $GITHUB_ENV
-          ls hopper/dist
+          ls dist
 
       - uses: actions/upload-artifact@v4
         with:
           name: ${{env.wheel_name}}
-          path: hopper/dist/${{env.wheel_name}}
+          path: dist/${{env.wheel_name}}
           if-no-files-found: error
