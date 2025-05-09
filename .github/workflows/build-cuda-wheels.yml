@@ -29,10 +29,55 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.10', '3.11', '3.12']
-        torch-version: ['2.4.0', '2.5.1', '2.6.0', '2.7.0']
-        cuda-version: ['12.8.1']
-        cxx11_abi: ['FALSE']
+        include:
+          - python-version: '3.10'
+            torch-version: '2.4.0'
+            cuda-version: '12.8.1'
+            cxx11_abi: 'FALSE'
+          - python-version: '3.10'
+            torch-version: '2.5.1'
+            cuda-version: '12.8.1'
+            cxx11_abi: 'FALSE'
+          - python-version: '3.10'
+            torch-version: '2.6.0'
+            cuda-version: '12.8.1'
+            cxx11_abi: 'FALSE'
+          - python-version: '3.10'
+            torch-version: '2.7.0'
+            cuda-version: '12.8.1'
+            cxx11_abi: 'FALSE'
+          - python-version: '3.11'
+            torch-version: '2.4.0'
+            cuda-version: '12.8.1'
+            cxx11_abi: 'FALSE'
+          - python-version: '3.11'
+            torch-version: '2.5.1'
+            cuda-version: '12.8.1'
+            cxx11_abi: 'FALSE'
+          - python-version: '3.11'
+            torch-version: '2.6.0'
+            cuda-version: '12.8.1'
+            cxx11_abi: 'FALSE'
+          - python-version: '3.11'
+            torch-version: '2.7.0'
+            cuda-version: '12.8.1'
+            cxx11_abi: 'FALSE'
+          - python-version: '3.12'
+            torch-version: '2.4.0'
+            cuda-version: '12.8.1'
+            cxx11_abi: 'FALSE'
+          - python-version: '3.12'
+            torch-version: '2.5.1'
+            cuda-version: '12.8.1'
+            cxx11_abi: 'FALSE'
+          - python-version: '3.12'
+            torch-version: '2.6.0'
+            cuda-version: '12.8.1'
+            cxx11_abi: 'FALSE'
+          - python-version: '3.12'
+            torch-version: '2.7.0'
+            cuda-version: '12.8.1'
+            cxx11_abi: 'FALSE'          
 
     steps:
       - name: Checkout Flash Attention
