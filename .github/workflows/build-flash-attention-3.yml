@@ -1,5 +1,7 @@
 name: FlashAttention-3
 
+permissions: {}
+
 on:
   workflow_dispatch:
     inputs:
@@ -103,12 +105,12 @@ jobs:
         with:
           repository: Dao-AILab/flash-attention
           ref: ${{ env.FLASH_ATTENTION_3_VERSION }}
-
+          persist-credentials: false
       - name: Checkout utils
         uses: actions/checkout@v4
         with:
           path: build_scripts
-
+          persist-credentials: false
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -132,7 +134,7 @@ jobs:
 
       - name: Install CUDA ${{ matrix.cuda-version }}
         if: ${{ matrix.cuda-version != 'cpu' }}
-        uses: Jimver/cuda-toolkit@v0.2.23
+        uses: Jimver/cuda-toolkit@9b993a72d35b5634a69ca7e34b39a002a87c367c # v0.2.23
         id: cuda-toolkit
         with:
           cuda: ${{ matrix.cuda-version }}
