@@ -1,6 +1,9 @@
 name: FlashAttention
 
-permissions: {}
+permissions:
+  contents: read
+  actions: write
+  
 on:
   workflow_dispatch:
     inputs:
