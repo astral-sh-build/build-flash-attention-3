@@ -11,9 +11,7 @@ on:
         required: true
         default: "98edb0d29bb1db336fef845fb5fd49bc98b04b96"
         type: string
-  pull_request:
-    branches:
-      - main
+
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.event.pull_request.number || github.sha }}
@@ -31,6 +29,54 @@ jobs:
       matrix:
         include:
           - python-version: '3.10'
+            torch-version: '2.4.0'
+            cuda-version: '12.8.1'
+            cxx11_abi: 'FALSE'
+          - python-version: '3.10'
+            torch-version: '2.5.1'
+            cuda-version: '12.8.1'
+            cxx11_abi: 'FALSE'
+          - python-version: '3.10'
+            torch-version: '2.6.0'
+            cuda-version: '12.8.1'
+            cxx11_abi: 'FALSE'
+          - python-version: '3.10'
+            torch-version: '2.7.0'
+            cuda-version: '12.8.1'
+            cxx11_abi: 'FALSE'
+          - python-version: '3.11'
+            torch-version: '2.4.0'
+            cuda-version: '12.8.1'
+            cxx11_abi: 'FALSE'
+          - python-version: '3.11'
+            torch-version: '2.5.1'
+            cuda-version: '12.8.1'
+            cxx11_abi: 'FALSE'
+          - python-version: '3.11'
+            torch-version: '2.6.0'
+            cuda-version: '12.8.1'
+            cxx11_abi: 'FALSE'
+          - python-version: '3.11'
+            torch-version: '2.7.0'
+            cuda-version: '12.8.1'
+            cxx11_abi: 'FALSE'
+          - python-version: '3.12'
+            torch-version: '2.4.0'
+            cuda-version: '12.8.1'
+            cxx11_abi: 'FALSE'
+          - python-version: '3.12'
+            torch-version: '2.5.1'
+            cuda-version: '12.8.1'
+            cxx11_abi: 'FALSE'
+          - python-version: '3.12'
+            torch-version: '2.6.0'
+            cuda-version: '12.8.1'
+            cxx11_abi: 'FALSE'
+          - python-version: '3.12'
+            torch-version: '2.7.0'
+            cuda-version: '12.8.1'
+            cxx11_abi: 'FALSE'       
+          - python-version: '3.10'
             torch-version: '2.6.0'
             cuda-version: '12.8.1'
             cxx11_abi: 'TRUE'
@@ -53,7 +99,7 @@ jobs:
           - python-version: '3.12'
             torch-version: '2.7.0'
             cuda-version: '12.8.1'
-            cxx11_abi: 'TRUE'          
+            cxx11_abi: 'TRUE'
 
     steps:
       - name: Checkout Flash Attention
@@ -142,11 +188,12 @@ jobs:
 
       - name: Log Built Wheels
         run: |
-          ls ./hopper/dist
+          wheel_name=$(ls hopper/dist/*whl | xargs -n 1 basename)
+          echo "wheel_name=${wheel_name}" >> $GITHUB_ENV
+          ls hopper/dist
 
-      - name: Upload wheels as artifacts
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
-          name: wheel-${{ matrix.torch-version }}-${{ matrix.cuda-version }}-${{ matrix.python-version }}-${{ matrix.cxx11_abi }}-${{ matrix.os }}
-          path: ./hopper/dist/*.whl
+          name: ${{env.wheel_name}}
+          path: hopper/dist/${{env.wheel_name}}
           if-no-files-found: error
