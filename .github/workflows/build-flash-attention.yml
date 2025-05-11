@@ -131,13 +131,13 @@ jobs:
           python3 -m cibuildwheel --output-dir dist
         env:
           CIBW_BUILD: cp${{ env.MATRIX_PYTHON_VERSION }}-*64
-          CIBW_MANYLINUX_X86_64_IMAGE: pytorch/manylinux2_28-builder:cuda${{ env.MANYLINUX_CUDA_VERSION }}
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
           CIBW_BEFORE_BUILD_LINUX: >
             (yes | dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo || true) &&
-            (yum install -y cuda-driver-devel-${{ env.MANYLINUX_CUDA_COMPAT_VERSION }} || true) &&
+            (yum install -y cuda-toolkit-${{ env.MANYLINUX_CUDA_COMPAT_VERSION }} || true) &&
             (yum install -y glibc glibc-devel || apt-get install -y libc6-dev || apk add --update --no-cache musl-dev || true) &&
             (yum install -y libffi-devel || apt-get install -y libffi-devel || apk add --update --no-cache libffi-devel || true) &&
-            pip install --upgrade pip &&
+            pip install --upgrade pip wheel &&
             pip install typing-extensions==4.12.2 &&
             export TORCH_CUDA_VERSION=$(python -c "from os import environ as env; minv = {'2.4': 118, '2.5': 118, '2.6': 118, '2.7': 118}[env['MATRIX_TORCH_VERSION']]; maxv = {'2.4': 124, '2.5': 124, '2.6': 126, '2.7': 128}[env['MATRIX_TORCH_VERSION']]; print(minv if int(env['MATRIX_CUDA_VERSION']) < 120 else maxv)") &&
             pip install --no-cache-dir torch==${{ matrix.torch-version }} --index-url https://download.pytorch.org/whl/cu${TORCH_CUDA_VERSION}
@@ -157,6 +157,7 @@ jobs:
             MAX_JOBS=16
           CIBW_SKIP: "*musllinux*"
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: "auditwheel repair -w /tmp/cibuildwheel/repaired_wheel {wheel} --exclude libcuda.so --exclude libcuda.so.1 --exclude libc10.so --exclude libc10_cuda.so --exclude libtorch.so --exclude libtorch_python.so --exclude libtorch_cpu.so --exclude libtorch_cuda.so --exclude libtorch_cuda_cpp.so --exclude libtorch_cuda_cu.so --exclude libcudart.so.11 --exclude libcudart.so.12 --exclude libcudart.so.11.0 --exclude libcudart.so.12.0 --exclude libcurand.so.10 --exclude libcufile_rdma.so --exclude libcufile_rdma.so.1 --exclude libcufile.so.1 --exclude libcufile.so.0 --exclude libcufile.so"
+          CIBW_BUILD_FRONTEND: "pip; args: --no-build-isolation"
 
       - name: Log Built Wheels
         run: |
