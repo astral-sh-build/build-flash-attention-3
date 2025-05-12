@@ -96,6 +96,7 @@ jobs:
           repository: Dao-AILab/flash-attention
           ref: ${{ env.FLASH_ATTENTION_VERSION }}
           persist-credentials: false
+
       - name: Checkout utils
         uses: actions/checkout@v4
         with:
@@ -105,72 +106,56 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.11"
 
       - name: Set CUDA and PyTorch versions
         run: |
+          echo "CI_CUDA_VERSION=$(echo ${{ matrix.cuda-version }})" >> $GITHUB_ENV
+          echo "CI_TORCH_VERSION=$(echo ${{ matrix.torch-version }})" >> $GITHUB_ENV
+          echo "CI_PYTHON_VERSION=$(echo ${{ matrix.python-version }})" >> $GITHUB_ENV
           echo "MATRIX_CUDA_VERSION=$(echo ${{ matrix.cuda-version }} | awk -F \. {'print $1 $2'})" >> $GITHUB_ENV
           echo "MATRIX_TORCH_VERSION=$(echo ${{ matrix.torch-version }} | awk -F \. {'print $1 "." $2'})" >> $GITHUB_ENV
-          echo "WHEEL_CUDA_VERSION=$(echo ${{ matrix.cuda-version }} | awk -F \. {'print $1'})" >> $GITHUB_ENV
           echo "MATRIX_PYTHON_VERSION=$(echo ${{ matrix.python-version }} | awk -F \. {'print $1 $2'})" >> $GITHUB_ENV
 
-      - name: Free up disk space
-        if: ${{ runner.os == 'Linux' }}
-        # https://github.com/easimon/maximize-build-space/blob/master/action.yml
-        # https://github.com/easimon/maximize-build-space/tree/test-report
+      - name: Install cibuildwheel
         run: |
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/ghc
-          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          echo "MANYLINUX_CUDA_VERSION=$(python -c "from os import environ as env; print({'118': '11.8', '121': '12.1', '124': '12.4', '126': '12.6', '128': '12.8'}[env['MATRIX_CUDA_VERSION']])")" >> $GITHUB_ENV
+          echo "MANYLINUX_CUDA_COMPAT_VERSION=$(python -c "from os import environ as env; print({'118': '11-8', '121': '12-1', '124': '12-4', '126': '12-6', '128': '12-8'}[env['MATRIX_CUDA_VERSION']])")" >> $GITHUB_ENV
+          python3 -m pip install --upgrade pip
+          python3 -m pip install cibuildwheel
 
-      - name: Install CUDA ${{ matrix.cuda-version }}
-        if: ${{ matrix.cuda-version != 'cpu' }}
-        uses: Jimver/cuda-toolkit@9b993a72d35b5634a69ca7e34b39a002a87c367c # v0.2.23
-        id: cuda-toolkit
-        with:
-          cuda: ${{ matrix.cuda-version }}
-          linux-local-args: '["--toolkit"]'
-          # default method is "local", and we're hitting some error with caching for CUDA 11.8 and 12.1
-          # method: ${{ (matrix.cuda-version == '11.8.0' || matrix.cuda-version == '12.1.0') && 'network' || 'local' }}
-          method: "network"
-
-      - name: List CUDA include directory
-        run: ls /usr/local/cuda-12.8/include/
-
-      - name: Install PyTorch ${{ matrix.torch-version }}+cu${{ matrix.cuda-version }}
+      - name: Build wheels for Pytorch ${{ matrix.torch-version }}+cu${{ matrix.cuda-version }}
         run: |
-          pip install --upgrade pip
-          # With python 3.13 and torch 2.5.1, unless we update typing-extensions, we get error
-          # AttributeError: attribute '__default__' of 'typing.ParamSpec' objects is not writable
-          pip install typing-extensions==4.12.2
-          # We want to figure out the CUDA version to download pytorch
-          # e.g. we can have system CUDA version being 11.7 but if torch==1.12 then we need to download the wheel from cu116
-          # see https://github.com/pytorch/pytorch/blob/main/RELEASE.md#release-compatibility-matrix
-          # This code is ugly, maybe there's a better way to do this.
-          export TORCH_CUDA_VERSION=$(python -c "from os import environ as env; \
-            minv = {'2.4': 118, '2.5': 118, '2.6': 118, '2.7': 118}[env['MATRIX_TORCH_VERSION']]; \
-            maxv = {'2.4': 124, '2.5': 124, '2.6': 126, '2.7': 128}[env['MATRIX_TORCH_VERSION']]; \
-            print(minv if int(env['MATRIX_CUDA_VERSION']) < 120 else maxv)" \
-          )
-          pip install --no-cache-dir torch==${{ matrix.torch-version }} --index-url https://download.pytorch.org/whl/cu${TORCH_CUDA_VERSION}
-          nvcc --version
-          python --version
-          python -c "import torch; print('PyTorch:', torch.__version__)"
-          python -c "import torch; print('CUDA:', torch.version.cuda)"
-          python -c "from torch.utils import cpp_extension; print (cpp_extension.CUDA_HOME)"
-        shell: bash
-
-      - name: Build wheel
-        run: |
-          pip install setuptools ninja packaging wheel
-          export PATH=/usr/local/nvidia/bin:/usr/local/nvidia/lib64:$PATH
-          export LD_LIBRARY_PATH=/usr/local/nvidia/lib64:/usr/local/cuda/lib64:$LD_LIBRARY_PATH
-          # Limit MAX_JOBS otherwise the github runner goes OOM
-          MAX_JOBS=16 FLASH_ATTENTION_FORCE_BUILD="TRUE" FLASH_ATTENTION_FORCE_CXX11_ABI=${{ matrix.cxx11_abi}} python setup.py bdist_wheel --dist-dir=dist
-          tmpname=cu${WHEEL_CUDA_VERSION}torch${MATRIX_TORCH_VERSION}cxx11abi${{ matrix.cxx11_abi }}
-          wheel_name=$(ls dist/*whl | xargs -n 1 basename | sed "s/-/+$tmpname-/2")
-          ls dist/*whl |xargs -I {} mv {} dist/${wheel_name}
-          echo "wheel_name=${wheel_name}" >> $GITHUB_ENV
+          python3 -m cibuildwheel --output-dir dist
+        env:
+          CIBW_BUILD: cp${{ env.MATRIX_PYTHON_VERSION }}-*64
+          CIBW_MANYLINUX_X86_64_IMAGE: pytorch/manylinux2_28-builder:cuda${{ env.MANYLINUX_CUDA_VERSION }}
+          CIBW_BEFORE_BUILD_LINUX: >
+            (yes | dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo || true) &&
+            (yum install -y cuda-driver-devel-${{ env.MANYLINUX_CUDA_COMPAT_VERSION }} || true) &&
+            (yum install -y glibc glibc-devel || apt-get install -y libc6-dev || apk add --update --no-cache musl-dev || true) &&
+            (yum install -y libffi-devel || apt-get install -y libffi-devel || apk add --update --no-cache libffi-devel || true) &&
+            pip install --upgrade pip &&
+            pip install typing-extensions==4.12.2 &&
+            export TORCH_CUDA_VERSION=$(python -c "from os import environ as env; minv = {'2.4': 118, '2.5': 118, '2.6': 118, '2.7': 118}[env['MATRIX_TORCH_VERSION']]; maxv = {'2.4': 124, '2.5': 124, '2.6': 126, '2.7': 128}[env['MATRIX_TORCH_VERSION']]; print(minv if int(env['MATRIX_CUDA_VERSION']) < 120 else maxv)") &&
+            pip install --no-cache-dir torch==${{ matrix.torch-version }} --index-url https://download.pytorch.org/whl/cu${TORCH_CUDA_VERSION}
+          CIBW_ENVIRONMENT: >
+            CUDA_HOME="/usr/local/cuda-${{ env.MANYLINUX_CUDA_VERSION }}"
+            LIBRARY_PATH="/usr/lib64"
+            LD_LIBRARY_PATH="/usr/lib64"
+            LDFLAGS="-ldl -L/usr/local/cuda-${{ env.MANYLINUX_CUDA_VERSION }}/targets/x86_64-linux/lib/stubs"
+            AUDITWHEEL_PLAT="manylinux_2_24_$(uname -m)"
+            MATRIX_CUDA_VERSION=${{ env.MATRIX_CUDA_VERSION }}
+            MATRIX_TORCH_VERSION=${{ env.MATRIX_TORCH_VERSION }}
+            MATRIX_PYTHON_VERSION=${{ env.MATRIX_PYTHON_VERSION }}
+            CI_CUDA_VERSION=${{ env.CI_CUDA_VERSION }}
+            CI_TORCH_VERSION=${{ env.CI_TORCH_VERSION }}
+            CI_PYTHON_VERSION=${{ env.CI_PYTHON_VERSION }}
+            FLASH_ATTENTION_FORCE_BUILD="TRUE"
+            FLASH_ATTENTION_FORCE_CXX11_ABI=${{ matrix.cxx11_abi }}
+            MAX_JOBS=16
+          CIBW_SKIP: "*musllinux*"
+          CIBW_REPAIR_WHEEL_COMMAND_LINUX: "auditwheel repair -w /tmp/cibuildwheel/repaired_wheel {wheel} --exclude libcuda.so --exclude libcuda.so.1 --exclude libc10.so --exclude libc10_cuda.so --exclude libtorch.so --exclude libtorch_python.so --exclude libtorch_cpu.so --exclude libtorch_cuda.so --exclude libtorch_cuda_cpp.so --exclude libtorch_cuda_cu.so --exclude libcudart.so.11 --exclude libcudart.so.12 --exclude libcudart.so.11.0 --exclude libcudart.so.12.0 --exclude libcurand.so.10 --exclude libcufile_rdma.so --exclude libcufile_rdma.so.1 --exclude libcufile.so.1 --exclude libcufile.so.0 --exclude libcufile.so"
 
       - name: Log Built Wheels
         run: |
