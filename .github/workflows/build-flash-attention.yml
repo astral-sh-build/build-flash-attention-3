@@ -106,7 +106,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Set CUDA and PyTorch versions
         run: |
@@ -160,7 +160,7 @@ jobs:
 
       - name: Rename wheel
         run: |
-          tmpname=cu${MATRIX_CUDA_VERSION}torch${MATRIX_TORCH_VERSION}cxx11abi${{ matrix.cxx11_abi }}
+          tmpname=cu${{ matrix.cuda-version }}torch${{ matrix.torch-version }}cxx11abi${{ matrix.cxx11_abi }}
           wheel_name=$(ls dist/*whl | xargs -n 1 basename | sed "s/-/+$tmpname-/2")
           ls dist/*whl |xargs -I {} mv {} dist/${wheel_name}
           echo "wheel_name=${wheel_name}" >> $GITHUB_ENV
