@@ -144,7 +144,7 @@ jobs:
             LIBRARY_PATH="/usr/lib64"
             LD_LIBRARY_PATH="/usr/lib64"
             LDFLAGS="-ldl -L/usr/local/cuda-${{ env.MANYLINUX_CUDA_VERSION }}/targets/x86_64-linux/lib/stubs"
-            AUDITWHEEL_PLAT="manylinux_2_24_$(uname -m)"
+            AUDITWHEEL_PLAT="manylinux_$(python -c "from os import environ as env; print({'2.4': '2_17', '2.5': '2_17', '2.6': '2_24', '2.7': '2_24'}[env['MATRIX_TORCH_VERSION']])")_$(uname -m)"
             MATRIX_CUDA_VERSION=${{ env.MATRIX_CUDA_VERSION }}
             MATRIX_TORCH_VERSION=${{ env.MATRIX_TORCH_VERSION }}
             MATRIX_PYTHON_VERSION=${{ env.MATRIX_PYTHON_VERSION }}
