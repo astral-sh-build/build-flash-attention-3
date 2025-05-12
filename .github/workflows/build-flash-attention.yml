@@ -163,6 +163,14 @@ jobs:
           echo "wheel_name=${wheel_name}" >> $GITHUB_ENV
           ls dist
 
+      - name: Rename wheel
+        run: |
+          tmpname=cu${WHEEL_CUDA_VERSION}torch${MATRIX_TORCH_VERSION}cxx11abi${{ matrix.cxx11_abi }}
+          wheel_name=$(ls dist/*whl | xargs -n 1 basename | sed "s/-/+$tmpname-/2")
+          ls dist/*whl |xargs -I {} mv {} dist/${wheel_name}
+          echo "wheel_name=${wheel_name}" >> $GITHUB_ENV
+          ls dist
+
       - uses: actions/upload-artifact@v4
         with:
           name: ${{env.wheel_name}}
