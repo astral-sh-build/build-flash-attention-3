@@ -110,9 +110,6 @@ jobs:
 
       - name: Set CUDA and PyTorch versions
         run: |
-          echo "CI_CUDA_VERSION=$(echo ${{ matrix.cuda-version }})" >> $GITHUB_ENV
-          echo "CI_TORCH_VERSION=$(echo ${{ matrix.torch-version }})" >> $GITHUB_ENV
-          echo "CI_PYTHON_VERSION=$(echo ${{ matrix.python-version }})" >> $GITHUB_ENV
           echo "MATRIX_CUDA_VERSION=$(echo ${{ matrix.cuda-version }} | awk -F \. {'print $1 $2'})" >> $GITHUB_ENV
           echo "MATRIX_TORCH_VERSION=$(echo ${{ matrix.torch-version }} | awk -F \. {'print $1 "." $2'})" >> $GITHUB_ENV
           echo "MATRIX_PYTHON_VERSION=$(echo ${{ matrix.python-version }} | awk -F \. {'print $1 $2'})" >> $GITHUB_ENV
@@ -149,9 +146,6 @@ jobs:
             MATRIX_CUDA_VERSION=${{ env.MATRIX_CUDA_VERSION }}
             MATRIX_TORCH_VERSION=${{ env.MATRIX_TORCH_VERSION }}
             MATRIX_PYTHON_VERSION=${{ env.MATRIX_PYTHON_VERSION }}
-            CI_CUDA_VERSION=${{ env.CI_CUDA_VERSION }}
-            CI_TORCH_VERSION=${{ env.CI_TORCH_VERSION }}
-            CI_PYTHON_VERSION=${{ env.CI_PYTHON_VERSION }}
             FLASH_ATTENTION_FORCE_BUILD="TRUE"
             FLASH_ATTENTION_FORCE_CXX11_ABI=${{ matrix.cxx11_abi }}
             MAX_JOBS=16
@@ -166,7 +160,7 @@ jobs:
 
       - name: Rename wheel
         run: |
-          tmpname=cu${WHEEL_CUDA_VERSION}torch${MATRIX_TORCH_VERSION}cxx11abi${{ matrix.cxx11_abi }}
+          tmpname=cu${MATRIX_CUDA_VERSION}torch${MATRIX_TORCH_VERSION}cxx11abi${{ matrix.cxx11_abi }}
           wheel_name=$(ls dist/*whl | xargs -n 1 basename | sed "s/-/+$tmpname-/2")
           ls dist/*whl |xargs -I {} mv {} dist/${wheel_name}
           echo "wheel_name=${wheel_name}" >> $GITHUB_ENV
