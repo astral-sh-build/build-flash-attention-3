@@ -104,18 +104,18 @@ jobs:
             uv pip install --no-cache-dir torch==${{ matrix.torch-version }} --index-url https://download.pytorch.org/whl/cu${TORCH_CUDA_VERSION}
           CIBW_ENVIRONMENT: >
             PATH=$PATH:/root/.local/bin
-            CUDA_HOME="/usr/local/cuda-${{ env.MANYLINUX_CUDA_VERSION }}
+            CUDA_HOME="/usr/local/cuda-${{ env.MANYLINUX_CUDA_VERSION }}"
             LIBRARY_PATH="/usr/lib64"
             LD_LIBRARY_PATH="/usr/lib64"
             LDFLAGS="-ldl -L/usr/local/cuda-${{ env.MANYLINUX_CUDA_VERSION }}/targets/x86_64-linux/lib/stubs"
             AUDITWHEEL_PLAT="manylinux_${{ env.MANYLINUX_GLIBC_VERSION }}_$(uname -m)"
-            MATRIX_CUDA_VERSION=${{ env.MATRIX_CUDA_VERSION }}
-            MATRIX_TORCH_VERSION=${{ env.MATRIX_TORCH_VERSION }}
-            MATRIX_PYTHON_VERSION=${{ env.MATRIX_PYTHON_VERSION }}
-            MANYLINUX_CUDA_VERSION=${{ env.MANYLINUX_CUDA_VERSION }}
-            MANYLINUX_CUDA_COMPAT_VERSION=${{ env.MANYLINUX_CUDA_COMPAT_VERSION }}
-            CI_AUDITWHEEL_EXCLUDES=${{ env.CI_AUDITWHEEL_EXCLUDES }}
-            TORCH_CUDA_VERSION=${{ env.TORCH_CUDA_VERSION }}
+            MATRIX_CUDA_VERSION="${{ env.MATRIX_CUDA_VERSION }}"
+            MATRIX_TORCH_VERSION="${{ env.MATRIX_TORCH_VERSION }}"
+            MATRIX_PYTHON_VERSION="${{ env.MATRIX_PYTHON_VERSION }}"
+            MANYLINUX_CUDA_VERSION="${{ env.MANYLINUX_CUDA_VERSION }}"
+            MANYLINUX_CUDA_COMPAT_VERSION="${{ env.MANYLINUX_CUDA_COMPAT_VERSION }}"
+            CI_AUDITWHEEL_EXCLUDES="${{ env.CI_AUDITWHEEL_EXCLUDES }}"
+            TORCH_CUDA_VERSION="${{ env.TORCH_CUDA_VERSION }}"
             FLASH_ATTENTION_FORCE_BUILD="TRUE"
             FLASH_ATTENTION_FORCE_CXX11_ABI=${{ matrix.cxx11-abi }}
             MAX_JOBS=16
