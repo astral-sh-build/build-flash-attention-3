@@ -44,10 +44,10 @@ PYTORCH_CUDA_RANGES: dict[str, tuple[str, str]] = {
 # Actual CUDA versions to build against for each PyTorch version.
 PYTORCH_CUDA_VERSIONS: dict[str, list[str]] = {
     "2.7": ["12.6.0", "12.8.0"],
-    "2.8": ["12.6.0", "12.8.0"],
+    "2.8": ["12.6.0", "12.8.0", "12.9.0"],
     # NOTE(ww): PyTorch 2.9 supports CUDA 13.0, but FlashAttention-3
     # seemingly does not yet (via their cutlass dependency).
-    "2.9": ["12.6.0", "12.8.0"],
+    "2.9": ["12.6.0", "12.8.0", "12.9.0"],
 }
 
 # The glibc version to use for each PyTorch version, for manylinux builds.
