@@ -12,8 +12,8 @@ from packaging.version import Version
 # Versions of PyTorch we actually want to include in the matrix.
 TORCH_VERSIONS = [
     "2.7.1",
-    # "2.8.0",
-    # "2.9.0",
+    "2.8.0",
+    "2.9.0",
 ]
 
 # Versions of Python we actually want to include in the matrix.
