@@ -104,7 +104,7 @@ jobs:
             uv pip install --no-cache-dir torch==${{ matrix.torch-version }} --index-url https://download.pytorch.org/whl/cu${TORCH_CUDA_VERSION}
           CIBW_ENVIRONMENT: >
             PATH=$PATH:/root/.local/bin
-            CUDA_HOME="/usr/local/cuda-${{ env.MANYLINUX_CUDA_VERSION }}"
+            CUDA_HOME="/usr/local/cuda-${{ env.MANYLINUX_CUDA_VERSION }}
             LIBRARY_PATH="/usr/lib64"
             LD_LIBRARY_PATH="/usr/lib64"
             LDFLAGS="-ldl -L/usr/local/cuda-${{ env.MANYLINUX_CUDA_VERSION }}/targets/x86_64-linux/lib/stubs"
