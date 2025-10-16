@@ -19,9 +19,9 @@ TORCH_VERSIONS = [
 # Versions of Python we actually want to include in the matrix.
 PYTHON_VERSIONS = [
     # "3.9",
-    # "3.10",
-    # "3.11",
-    # "3.12",
+    "3.10",
+    "3.11",
+    "3.12",
     "3.13",
     # "3.14", # TODO: Test for FlashAttention 3
 ]
