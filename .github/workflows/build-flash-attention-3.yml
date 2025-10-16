@@ -101,7 +101,7 @@ jobs:
             (yum install -y cuda-driver-devel-${{ env.MANYLINUX_CUDA_COMPAT_VERSION }} || true) &&
             (yum install -y glibc glibc-devel || apt-get install -y libc6-dev || apk add --update --no-cache musl-dev || true) &&
             (yum install -y libffi-devel || apt-get install -y libffi-devel || apk add --update --no-cache libffi-devel || true) &&
-            uv pip install typing-extensions==4.12.2 &&
+            uv pip install typing-extensions==4.12.2 setuptools wheel &&
             uv pip install --no-cache-dir torch==${{ matrix.torch-version }} --index-url https://download.pytorch.org/whl/cu${TORCH_CUDA_VERSION}
           CIBW_ENVIRONMENT: >
             PATH=$PATH:/root/.local/bin
