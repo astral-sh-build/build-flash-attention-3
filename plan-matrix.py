@@ -48,6 +48,16 @@ PYTORCH_CUDA_VERSIONS: dict[str, list[str]] = {
     "2.9": ["12.6.0", "12.8.0", "13.0.0"],
 }
 
+# The glibc version to use for each PyTorch version, for manylinux builds.
+TORCH_GLIBC_VERSION: dict[str, str] = {
+    "2.4": "2_17",
+    "2.5": "2_17",
+    "2.6": "2_24",
+    "2.7": "2_24",
+    "2.8": "2_24",
+    "2.9": "2_28",
+}
+
 
 AUDITWHEEL_BLANKET_EXCLUDES = [
     "libcuda.so",
@@ -144,6 +154,9 @@ def main() -> None:
         row["MANYLINUX_CUDA_COMPAT_VERSION"] = (
             f"{cuda_version.major}-{cuda_version.minor}"
         )
+
+        # MANYLINUX_GLIBC_VERSION: the glibc version to use for manylinux builds.
+        row["MANYLINUX_GLIBC_VERSION"] = TORCH_GLIBC_VERSION[torch_x_y]
 
         # `CI_AUDITWHEEL_EXCLUDES`: `--exclude {lib}` for each lib that should
         # be excluded when running `auditwheel repair`.
