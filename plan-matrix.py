@@ -169,7 +169,9 @@ def main() -> None:
         )
 
         # MANYLINUX_GLIBC_VERSION: the glibc version to use for manylinux builds.
-        row["MANYLINUX_GLIBC_VERSION"] = TORCH_GLIBC_VERSION[torch_x_y]
+        row["MANYLINUX_GLIBC_VERSION"] = TORCH_GLIBC_VERSION[
+            row["MATRIX_TORCH_VERSION"]
+        ]
 
         # `CI_AUDITWHEEL_EXCLUDES`: `--exclude {lib}` for each lib that should
         # be excluded when running `auditwheel repair`.
