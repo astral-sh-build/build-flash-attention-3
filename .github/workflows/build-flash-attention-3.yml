@@ -99,8 +99,7 @@ jobs:
           CIBW_BEFORE_ALL: >
             curl -LsSf https://astral.sh/uv/install.sh | sh
           CIBW_BEFORE_BUILD_LINUX: >
-            dnf install -y ninja-build glibc glibc-devel libffi-devel &&
-            uv pip install typing-extensions==4.12.2 setuptools wheel &&
+            uv pip install typing-extensions==4.12.2 setuptools wheel ninja &&
             uv pip install --no-cache-dir torch==${{ matrix.torch-version }} --index-url https://download.pytorch.org/whl/cu${TORCH_CUDA_VERSION}
           CIBW_ENVIRONMENT: >
             PATH=$PATH:/root/.local/bin
