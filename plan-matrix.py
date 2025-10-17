@@ -9,18 +9,12 @@ import json
 
 from packaging.version import Version
 
-# Architectures we want to build for.
-ARCHES = [
-    "x86_64",
-    "aarch64",
-]
+ARCH_TORCH_PAIRS = {
+    "x86_64": ["2.7.1", "2.8.0", "2.9.0"],
+    # PyTorch does not provide aarch64 wheels for 2.8.0.
+    "aarch64": ["2.7.1", "2.9.0"],
+}
 
-# Versions of PyTorch we actually want to include in the matrix.
-TORCH_VERSIONS = [
-    "2.7.1",
-    "2.8.0",
-    "2.9.0",
-]
 
 # Versions of Python we actually want to include in the matrix.
 PYTHON_VERSIONS = [
@@ -118,19 +112,16 @@ def main() -> None:
     # `target-arch`: the target architecture, e.g. "x86_64" or "aarch64"
 
     rows = []
-    for target_arch in ARCHES:
-        for python_version in PYTHON_VERSIONS:
-            for torch_version in TORCH_VERSIONS:
-                if python_version not in TORCH_PYTHON_SUPPORT[torch_version]:
-                    continue
-
-                torch_version = Version(torch_version)
-                torch_x_y = f"{torch_version.major}.{torch_version.minor}"
+    for target_arch, torch_versions in ARCH_TORCH_PAIRS.items():
+        for torch_version in torch_versions:
+            for python_version in TORCH_PYTHON_SUPPORT[torch_version]:
+                torch_version_parsed = Version(torch_version)
+                torch_x_y = f"{torch_version_parsed.major}.{torch_version_parsed.minor}"
                 cuda_versions = PYTORCH_CUDA_VERSIONS[torch_x_y]
                 for cuda_version in cuda_versions:
                     row = {
                         "target-arch": target_arch,
-                        "torch-version": str(torch_version),
+                        "torch-version": str(torch_version_parsed),
                         "python-version": python_version,
                         "cuda-version": cuda_version,
                         # TODO(ww): Parametrize this? The original
