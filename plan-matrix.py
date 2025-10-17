@@ -16,16 +16,6 @@ ARCH_TORCH_PAIRS = {
 }
 
 
-# Versions of Python we actually want to include in the matrix.
-PYTHON_VERSIONS = [
-    # "3.9",
-    "3.10",
-    "3.11",
-    "3.12",
-    "3.13",
-    # "3.14", # TODO: Test for FlashAttention 3
-]
-
 # Supported Python versions for each PyTorch version.
 # We use these to filter out the matrix.
 TORCH_PYTHON_SUPPORT = {
@@ -188,6 +178,14 @@ def main() -> None:
         row["TORCH_CUDA_VERSION"] = (
             f"{torch_cuda_version.major}{torch_cuda_version.minor}"
         )
+
+        # RUNNER: the GitHub Actions runner to use.
+        if row["target-arch"] == "x86_64":
+            row["RUNNER"] = "depot-ubuntu-24.04-8"
+        elif row["target-arch"] == "aarch64":
+            row["RUNNER"] = "depot-ubuntu-24.04-arm-8"
+        else:
+            raise ValueError(f"Unknown target arch: {row['target-arch']}")
 
     print(json.dumps(rows))
 

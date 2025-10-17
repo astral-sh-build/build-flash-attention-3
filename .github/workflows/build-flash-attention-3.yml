@@ -42,7 +42,7 @@ jobs:
   build-wheels:
     name: Build Wheel
     needs: [plan-matrix]
-    runs-on: depot-ubuntu-latest-64
+    runs-on: ${{ matrix.RUNNER }}
     env:
       FLASH_ATTENTION_3_VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.FLASH_ATTENTION_3_VERSION || '98edb0d29bb1db336fef845fb5fd49bc98b04b96' }}
 
