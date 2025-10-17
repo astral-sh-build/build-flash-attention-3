@@ -69,6 +69,11 @@ jobs:
           path: build_scripts
           persist-credentials: false
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 # v3.6.0
+        with:
+          platforms: all
+
       - name: Install uv
         uses: astral-sh/setup-uv@6b9c6063abd6010835644d4c2e1bef4cf5cd0fca # v6
 
@@ -92,12 +97,14 @@ jobs:
         run: |
           .venv/bin/cibuildwheel ./hopper --output-dir dist
         env:
+          CIBW_ARCHS_LINUX: ${{ matrix.target-arch }}
           CIBW_BUILD: cp${{ env.MATRIX_PYTHON_VERSION }}-*64
           CIBW_MANYLINUX_X86_64_IMAGE: pytorch/manylinux2_28-builder:cuda${{ env.MANYLINUX_CUDA_VERSION }}
+          CIBW_MANYLINUX_AARCH64_IMAGE: pytorch/manylinuxaarch64-builder:cuda${{ env.MANYLINUX_CUDA_VERSION }}
           CIBW_BEFORE_ALL: >
             curl -LsSf https://astral.sh/uv/install.sh | sh
           CIBW_BEFORE_BUILD_LINUX: >
-            (yes | dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo || true) &&
+            (yes | dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/${{ matrix.target-arch }}/cuda-rhel8.repo || true) &&
             (yum install -y cuda-driver-devel-${{ env.MANYLINUX_CUDA_COMPAT_VERSION }} || true) &&
             (yum install -y glibc glibc-devel || apt-get install -y libc6-dev || apk add --update --no-cache musl-dev || true) &&
             (yum install -y libffi-devel || apt-get install -y libffi-devel || apk add --update --no-cache libffi-devel || true) &&
@@ -108,7 +115,7 @@ jobs:
             CUDA_HOME="/usr/local/cuda-${{ env.MANYLINUX_CUDA_VERSION }}"
             LIBRARY_PATH="/usr/lib64"
             LD_LIBRARY_PATH="/usr/lib64"
-            LDFLAGS="-ldl -L/usr/local/cuda-${{ env.MANYLINUX_CUDA_VERSION }}/targets/x86_64-linux/lib/stubs"
+            LDFLAGS="-ldl -L/usr/local/cuda-${{ env.MANYLINUX_CUDA_VERSION }}/targets/${{ matrix.target-arch }}-linux/lib/stubs"
             AUDITWHEEL_PLAT="manylinux_${{ env.MANYLINUX_GLIBC_VERSION }}_$(uname -m)"
             MATRIX_CUDA_VERSION="${{ env.MATRIX_CUDA_VERSION }}"
             MATRIX_TORCH_VERSION="${{ env.MATRIX_TORCH_VERSION }}"

@@ -9,6 +9,12 @@ import json
 
 from packaging.version import Version
 
+# Architectures we want to build for.
+ARCHES = [
+    "x86_64",
+    "aarch64",
+]
+
 # Versions of PyTorch we actually want to include in the matrix.
 TORCH_VERSIONS = [
     "2.7.1",
@@ -104,34 +110,37 @@ EXCLUSIONS = [
 
 
 def main() -> None:
-    # Every matrix member is a primary 4-tuple of:
+    # Every matrix member is a primary 5-tuple of:
     # `torch-version`: the PyTorch version as "X.Y.Z", e.g. "2.7.0"
     # `python-version`: the Python version as "3.X", e.g. "3.10"
     # `cuda-version`: the CUDA version as "X.Y.Z", e.g. "11.8.0"
     # `cxx11-abi`: "TRUE" or "FALSE"
+    # `target-arch`: the target architecture, e.g. "x86_64" or "aarch64"
 
     rows = []
-    for python_version in PYTHON_VERSIONS:
-        for torch_version in TORCH_VERSIONS:
-            if python_version not in TORCH_PYTHON_SUPPORT[torch_version]:
-                continue
+    for target_arch in ARCHES:
+        for python_version in PYTHON_VERSIONS:
+            for torch_version in TORCH_VERSIONS:
+                if python_version not in TORCH_PYTHON_SUPPORT[torch_version]:
+                    continue
 
-            torch_version = Version(torch_version)
-            torch_x_y = f"{torch_version.major}.{torch_version.minor}"
-            cuda_versions = PYTORCH_CUDA_VERSIONS[torch_x_y]
-            for cuda_version in cuda_versions:
-                row = {
-                    "torch-version": str(torch_version),
-                    "python-version": python_version,
-                    "cuda-version": cuda_version,
-                    # TODO(ww): Parametrize this? The original
-                    # unrolled matrix had both TRUE and FALSE in ways
-                    # that I couldn't discern a pattern for.
-                    "cxx11-abi": "TRUE",
-                }
+                torch_version = Version(torch_version)
+                torch_x_y = f"{torch_version.major}.{torch_version.minor}"
+                cuda_versions = PYTORCH_CUDA_VERSIONS[torch_x_y]
+                for cuda_version in cuda_versions:
+                    row = {
+                        "target-arch": target_arch,
+                        "torch-version": str(torch_version),
+                        "python-version": python_version,
+                        "cuda-version": cuda_version,
+                        # TODO(ww): Parametrize this? The original
+                        # unrolled matrix had both TRUE and FALSE in ways
+                        # that I couldn't discern a pattern for.
+                        "cxx11-abi": "TRUE",
+                    }
 
-                if row not in EXCLUSIONS:
-                    rows.append(row)
+                    if row not in EXCLUSIONS:
+                        rows.append(row)
 
     # Transform each row to add various nice-to-have representations of fields.
     for row in rows:
