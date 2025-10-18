@@ -11,8 +11,7 @@ from packaging.version import Version
 
 ARCH_TORCH_PAIRS = {
     "x86_64": ["2.7.1", "2.8.0", "2.9.0"],
-    # PyTorch does not provide aarch64 wheels for 2.8.0.
-    "aarch64": ["2.7.1", "2.9.0"],
+    "aarch64": ["2.7.1", "2.8.0", "2.9.0"],
 }
 
 
@@ -27,7 +26,7 @@ TORCH_PYTHON_SUPPORT = {
 # Minimum and maximum CUDA versions for each PyTorch version.
 PYTORCH_CUDA_RANGES: dict[str, tuple[str, str]] = {
     "2.7": ("11.8", "12.8"),
-    "2.8": ("11.8", "12.8"),
+    "2.8": ("11.8", "12.9"),
     "2.9": ("12.6", "13.0"),
 }
 
