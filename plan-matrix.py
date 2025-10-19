@@ -9,35 +9,24 @@ import json
 
 from packaging.version import Version
 
-# Versions of PyTorch we actually want to include in the matrix.
-TORCH_VERSIONS = [
-    "2.7.1",
-    "2.8.0",
-    "2.9.0",
-]
+ARCH_TORCH_PAIRS = {
+    "x86_64": ["2.7.1", "2.8.0", "2.9.0"],
+    "aarch64": ["2.7.1", "2.8.0", "2.9.0"],
+}
 
-# Versions of Python we actually want to include in the matrix.
-PYTHON_VERSIONS = [
-    # "3.9",
-    "3.10",
-    "3.11",
-    "3.12",
-    "3.13",
-    # "3.14", # TODO: Test for FlashAttention 3
-]
 
 # Supported Python versions for each PyTorch version.
 # We use these to filter out the matrix.
 TORCH_PYTHON_SUPPORT = {
-    "2.7.1": ["3.9", "3.10", "3.11", "3.12", "3.13"],
-    "2.8.0": ["3.9", "3.10", "3.11", "3.12", "3.13"],
-    "2.9.0": ["3.10", "3.11", "3.12", "3.13", "3.14"],
+    "2.7": ["3.9", "3.10", "3.11", "3.12", "3.13"],
+    "2.8": ["3.9", "3.10", "3.11", "3.12", "3.13"],
+    "2.9": ["3.10", "3.11", "3.12", "3.13", "3.14"],
 }
 
 # Minimum and maximum CUDA versions for each PyTorch version.
 PYTORCH_CUDA_RANGES: dict[str, tuple[str, str]] = {
     "2.7": ("11.8", "12.8"),
-    "2.8": ("11.8", "12.8"),
+    "2.8": ("11.8", "12.9"),
     "2.9": ("12.6", "13.0"),
 }
 
@@ -58,7 +47,7 @@ TORCH_GLIBC_VERSION: dict[str, str] = {
     "2.5": "2_17",
     "2.6": "2_24",
     "2.7": "2_24",
-    "2.8": "2_24",
+    "2.8": "2_28",
     "2.9": "2_28",
 }
 
@@ -97,6 +86,13 @@ AUDITWHEEL_CUDA_VERSION_EXCLUDES = {
     ],
 }
 
+# CXX11 ABI configuration for each PyTorch version
+TORCH_CXX11_ABI = {
+    "2.7": ["TRUE"],
+    "2.8": ["TRUE"],
+    "2.9": ["TRUE"],
+}
+
 # Matrix exclusions.
 EXCLUSIONS = [
     # No exclusions yet.
@@ -104,34 +100,32 @@ EXCLUSIONS = [
 
 
 def main() -> None:
-    # Every matrix member is a primary 4-tuple of:
+    # Every matrix member is a primary 5-tuple of:
     # `torch-version`: the PyTorch version as "X.Y.Z", e.g. "2.7.0"
     # `python-version`: the Python version as "3.X", e.g. "3.10"
     # `cuda-version`: the CUDA version as "X.Y.Z", e.g. "11.8.0"
     # `cxx11-abi`: "TRUE" or "FALSE"
+    # `target-arch`: the target architecture, e.g. "x86_64" or "aarch64"
 
     rows = []
-    for python_version in PYTHON_VERSIONS:
-        for torch_version in TORCH_VERSIONS:
-            if python_version not in TORCH_PYTHON_SUPPORT[torch_version]:
-                continue
+    for target_arch, torch_versions in ARCH_TORCH_PAIRS.items():
+        for torch_version in torch_versions:
+            torch_version_parsed = Version(torch_version)
+            torch_x_y = f"{torch_version_parsed.major}.{torch_version_parsed.minor}"
+            for python_version in TORCH_PYTHON_SUPPORT[torch_x_y]:
+                cuda_versions = PYTORCH_CUDA_VERSIONS[torch_x_y]
+                for cuda_version in cuda_versions:
+                    for cxx11_abi in TORCH_CXX11_ABI[torch_x_y]:
+                        row = {
+                            "target-arch": target_arch,
+                            "torch-version": str(torch_version_parsed),
+                            "python-version": python_version,
+                            "cuda-version": cuda_version,
+                            "cxx11-abi": cxx11_abi,
+                        }
 
-            torch_version = Version(torch_version)
-            torch_x_y = f"{torch_version.major}.{torch_version.minor}"
-            cuda_versions = PYTORCH_CUDA_VERSIONS[torch_x_y]
-            for cuda_version in cuda_versions:
-                row = {
-                    "torch-version": str(torch_version),
-                    "python-version": python_version,
-                    "cuda-version": cuda_version,
-                    # TODO(ww): Parametrize this? The original
-                    # unrolled matrix had both TRUE and FALSE in ways
-                    # that I couldn't discern a pattern for.
-                    "cxx11-abi": "TRUE",
-                }
-
-                if row not in EXCLUSIONS:
-                    rows.append(row)
+                        if row not in EXCLUSIONS:
+                            rows.append(row)
 
     # Transform each row to add various nice-to-have representations of fields.
     for row in rows:
@@ -160,7 +154,9 @@ def main() -> None:
         )
 
         # MANYLINUX_GLIBC_VERSION: the glibc version to use for manylinux builds.
-        row["MANYLINUX_GLIBC_VERSION"] = TORCH_GLIBC_VERSION[torch_x_y]
+        row["MANYLINUX_GLIBC_VERSION"] = TORCH_GLIBC_VERSION[
+            row["MATRIX_TORCH_VERSION"]
+        ]
 
         # `CI_AUDITWHEEL_EXCLUDES`: `--exclude {lib}` for each lib that should
         # be excluded when running `auditwheel repair`.
@@ -186,6 +182,14 @@ def main() -> None:
         row["TORCH_CUDA_VERSION"] = (
             f"{torch_cuda_version.major}{torch_cuda_version.minor}"
         )
+
+        # RUNNER: the GitHub Actions runner to use.
+        if row["target-arch"] == "x86_64":
+            row["RUNNER"] = "depot-ubuntu-24.04-64"
+        elif row["target-arch"] == "aarch64":
+            row["RUNNER"] = "depot-ubuntu-24.04-arm-64"
+        else:
+            raise ValueError(f"Unknown target arch: {row['target-arch']}")
 
     print(json.dumps(rows))
 
