@@ -18,9 +18,9 @@ ARCH_TORCH_PAIRS = {
 # Supported Python versions for each PyTorch version.
 # We use these to filter out the matrix.
 TORCH_PYTHON_SUPPORT = {
-    "2.7.1": ["3.9", "3.10", "3.11", "3.12", "3.13"],
-    "2.8.0": ["3.9", "3.10", "3.11", "3.12", "3.13"],
-    "2.9.0": ["3.10", "3.11", "3.12", "3.13", "3.14"],
+    "2.7": ["3.9", "3.10", "3.11", "3.12", "3.13"],
+    "2.8": ["3.9", "3.10", "3.11", "3.12", "3.13"],
+    "2.9": ["3.10", "3.11", "3.12", "3.13", "3.14"],
 }
 
 # Minimum and maximum CUDA versions for each PyTorch version.
@@ -86,6 +86,13 @@ AUDITWHEEL_CUDA_VERSION_EXCLUDES = {
     ],
 }
 
+# CXX11 ABI configuration for each PyTorch version
+TORCH_CXX11_ABI = {
+    "2.7": ["TRUE"],
+    "2.8": ["TRUE"],
+    "2.9": ["TRUE"],
+}
+
 # Matrix exclusions.
 EXCLUSIONS = [
     # No exclusions yet.
@@ -103,24 +110,22 @@ def main() -> None:
     rows = []
     for target_arch, torch_versions in ARCH_TORCH_PAIRS.items():
         for torch_version in torch_versions:
-            for python_version in TORCH_PYTHON_SUPPORT[torch_version]:
-                torch_version_parsed = Version(torch_version)
-                torch_x_y = f"{torch_version_parsed.major}.{torch_version_parsed.minor}"
+            torch_version_parsed = Version(torch_version)
+            torch_x_y = f"{torch_version_parsed.major}.{torch_version_parsed.minor}"
+            for python_version in TORCH_PYTHON_SUPPORT[torch_x_y]:
                 cuda_versions = PYTORCH_CUDA_VERSIONS[torch_x_y]
                 for cuda_version in cuda_versions:
-                    row = {
-                        "target-arch": target_arch,
-                        "torch-version": str(torch_version_parsed),
-                        "python-version": python_version,
-                        "cuda-version": cuda_version,
-                        # TODO(ww): Parametrize this? The original
-                        # unrolled matrix had both TRUE and FALSE in ways
-                        # that I couldn't discern a pattern for.
-                        "cxx11-abi": "TRUE",
-                    }
+                    for cxx11_abi in TORCH_CXX11_ABI[torch_x_y]:
+                        row = {
+                            "target-arch": target_arch,
+                            "torch-version": str(torch_version_parsed),
+                            "python-version": python_version,
+                            "cuda-version": cuda_version,
+                            "cxx11-abi": cxx11_abi,
+                        }
 
-                    if row not in EXCLUSIONS:
-                        rows.append(row)
+                        if row not in EXCLUSIONS:
+                            rows.append(row)
 
     # Transform each row to add various nice-to-have representations of fields.
     for row in rows:
