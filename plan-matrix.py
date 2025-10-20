@@ -40,8 +40,6 @@ PYTORCH_CUDA_RANGES: dict[str, tuple[str, str]] = {
 PYTORCH_CUDA_VERSIONS: dict[str, list[str]] = {
     "2.7": ["12.8"],
     "2.8": ["12.9"],
-    # TODO(charlie): This should be 12.9, but the build fails as it can't find
-    # `libcupti.so.12` (`cannot open shared object file: No such file or directory`).
     "2.9": ["12.9", "13.0"],
 }
 
@@ -116,20 +114,24 @@ def main() -> None:
         for torch_version in torch_versions:
             torch_version_parsed = Version(torch_version)
             torch_x_y = f"{torch_version_parsed.major}.{torch_version_parsed.minor}"
-            for python_version in TORCH_PYTHON_SUPPORT[torch_x_y]:
-                cuda_versions = PYTORCH_CUDA_VERSIONS[torch_x_y]
-                for cuda_version in cuda_versions:
-                    for cxx11_abi in TORCH_CXX11_ABI[torch_x_y]:
-                        row = {
-                            "target-arch": target_arch,
-                            "torch-version": str(torch_version_parsed),
-                            "python-version": python_version,
-                            "cuda-version": cuda_version,
-                            "cxx11-abi": cxx11_abi,
-                        }
 
-                        if row not in EXCLUSIONS:
-                            rows.append(row)
+            # We only need to build against a single Python version, since FlashAttention 3
+            # builds against the stable ABI.
+            python_version = TORCH_PYTHON_SUPPORT[torch_x_y][-1]
+
+            cuda_versions = PYTORCH_CUDA_VERSIONS[torch_x_y]
+            for cuda_version in cuda_versions:
+                for cxx11_abi in TORCH_CXX11_ABI[torch_x_y]:
+                    row = {
+                        "target-arch": target_arch,
+                        "torch-version": str(torch_version_parsed),
+                        "python-version": python_version,
+                        "cuda-version": cuda_version,
+                        "cxx11-abi": cxx11_abi,
+                    }
+
+                    if row not in EXCLUSIONS:
+                        rows.append(row)
 
     # Transform each row to add various nice-to-have representations of fields.
     for row in rows:
