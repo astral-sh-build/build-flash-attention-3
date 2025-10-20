@@ -14,6 +14,7 @@ ARCH_TORCH_PAIRS = {
     "aarch64": ["2.7.1", "2.8.0", "2.9.0"],
 }
 
+
 # Supported Python versions for each PyTorch version.
 # See: https://github.com/pytorch/pytorch/blob/main/RELEASE.md#release-compatibility-matrix
 TORCH_PYTHON_SUPPORT = {
@@ -38,9 +39,13 @@ PYTORCH_CUDA_RANGES: dict[str, tuple[str, str]] = {
 
 # Actual CUDA versions to build against for each PyTorch version.
 PYTORCH_CUDA_VERSIONS: dict[str, list[str]] = {
-    "2.7": ["12.8"],
-    "2.8": ["12.9"],
-    "2.9": ["12.9", "13.0"],
+    "2.7": ["12.8.0"],
+    "2.8": ["12.9.0"],
+    # NOTE(ww): PyTorch 2.9 supports CUDA 13.0, but FlashAttention-3
+    # seemingly does not yet (via their cutlass dependency).
+    # Also, PyTorch has no `torch==2.9+cu129` wheel as of 2025-10-16,
+    # so we stay with 12.8 for now.
+    "2.9": ["12.8.0"],
 }
 
 # The glibc version to use for each PyTorch version, for manylinux builds.
@@ -53,6 +58,7 @@ TORCH_GLIBC_VERSION: dict[str, str] = {
     "2.8": "2_28",
     "2.9": "2_28",
 }
+
 
 AUDITWHEEL_BLANKET_EXCLUDES = [
     "libcuda.so",
@@ -114,24 +120,20 @@ def main() -> None:
         for torch_version in torch_versions:
             torch_version_parsed = Version(torch_version)
             torch_x_y = f"{torch_version_parsed.major}.{torch_version_parsed.minor}"
+            for python_version in TORCH_PYTHON_SUPPORT[torch_x_y]:
+                cuda_versions = PYTORCH_CUDA_VERSIONS[torch_x_y]
+                for cuda_version in cuda_versions:
+                    for cxx11_abi in TORCH_CXX11_ABI[torch_x_y]:
+                        row = {
+                            "target-arch": target_arch,
+                            "torch-version": str(torch_version_parsed),
+                            "python-version": python_version,
+                            "cuda-version": cuda_version,
+                            "cxx11-abi": cxx11_abi,
+                        }
 
-            # We only need to build against a single Python version, since FlashAttention 3
-            # builds against the stable ABI.
-            python_version = TORCH_PYTHON_SUPPORT[torch_x_y][-1]
-
-            cuda_versions = PYTORCH_CUDA_VERSIONS[torch_x_y]
-            for cuda_version in cuda_versions:
-                for cxx11_abi in TORCH_CXX11_ABI[torch_x_y]:
-                    row = {
-                        "target-arch": target_arch,
-                        "torch-version": str(torch_version_parsed),
-                        "python-version": python_version,
-                        "cuda-version": cuda_version,
-                        "cxx11-abi": cxx11_abi,
-                    }
-
-                    if row not in EXCLUSIONS:
-                        rows.append(row)
+                        if row not in EXCLUSIONS:
+                            rows.append(row)
 
     # Transform each row to add various nice-to-have representations of fields.
     for row in rows:
