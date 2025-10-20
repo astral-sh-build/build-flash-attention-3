@@ -10,7 +10,7 @@ on:
       FLASH_ATTENTION_3_VERSION:
         description: "FlashAttention-3 version"
         required: true
-        default: "98edb0d29bb1db336fef845fb5fd49bc98b04b96"
+        default: "8790c6ec23d4e8270ee3033e512314144800f86b"
         type: string
   release:
     types: [created]
@@ -61,8 +61,8 @@ jobs:
         id: flash-attention-3-version
         run: |
           # Extract FlashAttention-3 version from tag. Tags can be either:
-          # - 98edb0d29bb1db336fef845fb5fd49bc98b04b96 (legacy format; maps directly to FlashAttention-3 commit)
-          # - 98edb0d29bb1db336fef845fb5fd49bc98b04b96-r1 (new format; strip -rN suffix to get FlashAttention-3 commit)
+          # - 8790c6ec23d4e8270ee3033e512314144800f86b (legacy format; maps directly to FlashAttention-3 commit)
+          # - 8790c6ec23d4e8270ee3033e512314144800f86b-r1 (new format; strip -rN suffix to get FlashAttention-3 commit)
           if [ "${GITHUB_EVENT_NAME}" = "release" ]; then
             TAG="${GITHUB_REF_NAME}"
             # Remove -rN suffix if present
@@ -70,7 +70,7 @@ jobs:
           elif [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
             FLASH_ATTENTION_3_VERSION="${INPUTS_FLASH_ATTENTION_3_VERSION}"
           else
-            FLASH_ATTENTION_3_VERSION="98edb0d29bb1db336fef845fb5fd49bc98b04b96"
+            FLASH_ATTENTION_3_VERSION="8790c6ec23d4e8270ee3033e512314144800f86b"
           fi
           echo "version=${FLASH_ATTENTION_3_VERSION}" >> $GITHUB_OUTPUT
           echo "Using FlashAttention-3 version: ${FLASH_ATTENTION_3_VERSION}"
@@ -131,7 +131,7 @@ jobs:
             PATH=$PATH:/root/.local/bin
             CUDA_HOME="/usr/local/cuda-${{ env.MANYLINUX_CUDA_VERSION }}"
             LIBRARY_PATH="/usr/lib64"
-            LD_LIBRARY_PATH="/usr/lib64"
+            LD_LIBRARY_PATH="/usr/lib64:/usr/local/cuda-${{ env.MANYLINUX_CUDA_VERSION }}/lib64:/usr/local/cuda-${{ env.MANYLINUX_CUDA_VERSION }}/targets/${{ matrix.target-arch }}-linux/lib:/usr/local/cuda-${{ env.MANYLINUX_CUDA_VERSION }}/extras/CUPTI/lib64"
             LDFLAGS="-ldl -L/usr/local/cuda-${{ env.MANYLINUX_CUDA_VERSION }}/targets/${{ matrix.target-arch }}-linux/lib/stubs"
             AUDITWHEEL_PLAT="manylinux_${{ env.MANYLINUX_GLIBC_VERSION }}_$(uname -m)"
             MATRIX_CUDA_VERSION="${{ env.MATRIX_CUDA_VERSION }}"
