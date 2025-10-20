@@ -3,6 +3,8 @@ name: FlashAttention-3
 permissions: {}
 
 on:
+  pull_request:
+    branches: [main]
   workflow_dispatch:
     inputs:
       FLASH_ATTENTION_3_VERSION:
@@ -10,9 +12,8 @@ on:
         required: true
         default: "98edb0d29bb1db336fef845fb5fd49bc98b04b96"
         type: string
-  pull_request:
-    branches:
-      - main
+  release:
+    types: [created]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.event.pull_request.number || github.sha }}
@@ -45,11 +46,9 @@ jobs:
     needs: [plan-matrix]
     runs-on: ${{ matrix.RUNNER }}
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'no-build') }}
-    env:
-      FLASH_ATTENTION_3_VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.FLASH_ATTENTION_3_VERSION || '98edb0d29bb1db336fef845fb5fd49bc98b04b96' }}
 
     permissions:
-      contents: read
+      contents: write
       actions: write
 
     strategy:
@@ -58,11 +57,33 @@ jobs:
         include: ${{ fromJSON(needs.plan-matrix.outputs.matrix) }}
 
     steps:
+      - name: Determine FlashAttention-3 version
+        id: flash-attention-3-version
+        run: |
+          # Extract FlashAttention-3 version from tag. Tags can be either:
+          # - 98edb0d29bb1db336fef845fb5fd49bc98b04b96 (legacy format; maps directly to FlashAttention-3 commit)
+          # - 98edb0d29bb1db336fef845fb5fd49bc98b04b96-r1 (new format; strip -rN suffix to get FlashAttention-3 commit)
+          if [ "${GITHUB_EVENT_NAME}" = "release" ]; then
+            TAG="${GITHUB_REF_NAME}"
+            # Remove -rN suffix if present
+            FLASH_ATTENTION_3_VERSION="${TAG%-r*}"
+          elif [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            FLASH_ATTENTION_3_VERSION="${INPUTS_FLASH_ATTENTION_3_VERSION}"
+          else
+            FLASH_ATTENTION_3_VERSION="98edb0d29bb1db336fef845fb5fd49bc98b04b96"
+          fi
+          echo "version=${FLASH_ATTENTION_3_VERSION}" >> $GITHUB_OUTPUT
+          echo "Using FlashAttention-3 version: ${FLASH_ATTENTION_3_VERSION}"
+        env:
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          INPUTS_FLASH_ATTENTION_3_VERSION: ${{ inputs.FLASH_ATTENTION_3_VERSION }}
+
       - name: Checkout Flash Attention
         uses: actions/checkout@v4
         with:
           repository: Dao-AILab/flash-attention
-          ref: ${{ env.FLASH_ATTENTION_3_VERSION }}
+          ref: ${{ steps.flash-attention-3-version.outputs.version }}
           persist-credentials: false
 
       - name: Checkout utils
@@ -73,6 +94,8 @@ jobs:
 
       - name: Install uv
         uses: astral-sh/setup-uv@6b9c6063abd6010835644d4c2e1bef4cf5cd0fca # v6
+        with:
+          enable-cache: false
 
       - name: Set CUDA and PyTorch versions
         run: |
@@ -103,7 +126,7 @@ jobs:
           CIBW_BEFORE_BUILD_LINUX: >
             uv pip install typing-extensions==4.12.2 setuptools wheel ninja &&
             uv pip install --no-cache-dir torch==${{ matrix.torch-version }} --index-url https://download.pytorch.org/whl/cu${TORCH_CUDA_VERSION} &&
-            bash build_scripts/prepare_for_build.sh ${{ env.FLASH_ATTENTION_3_VERSION }}
+            bash build_scripts/prepare_for_build.sh ${{ steps.flash-attention-3-version.outputs.version }}
           CIBW_ENVIRONMENT: >
             PATH=$PATH:/root/.local/bin
             CUDA_HOME="/usr/local/cuda-${{ env.MANYLINUX_CUDA_VERSION }}"
@@ -140,8 +163,17 @@ jobs:
           echo "wheel_name=${wheel_name}" >> $GITHUB_ENV
           ls dist
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: github.event_name != 'release'
         with:
           name: ${{env.wheel_name}}
           path: dist/${{env.wheel_name}}
           if-no-files-found: error
+
+      - name: Upload wheels to release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@6da8fa9354ddfdc4aeace5fc48d7f679b5214090 # v2.4.1
+        with:
+          files: ./dist/*.whl
+          tag_name: ${{ github.ref_name }}
+          append_body: true
