@@ -14,7 +14,6 @@ ARCH_TORCH_PAIRS = {
     "aarch64": ["2.7.1", "2.8.0", "2.9.0"],
 }
 
-
 # Supported Python versions for each PyTorch version.
 # See: https://github.com/pytorch/pytorch/blob/main/RELEASE.md#release-compatibility-matrix
 TORCH_PYTHON_SUPPORT = {
@@ -39,13 +38,11 @@ PYTORCH_CUDA_RANGES: dict[str, tuple[str, str]] = {
 
 # Actual CUDA versions to build against for each PyTorch version.
 PYTORCH_CUDA_VERSIONS: dict[str, list[str]] = {
-    "2.7": ["12.8.0"],
-    "2.8": ["12.9.0"],
-    # NOTE(ww): PyTorch 2.9 supports CUDA 13.0, but FlashAttention-3
-    # seemingly does not yet (via their cutlass dependency).
-    # Also, PyTorch has no `torch==2.9+cu129` wheel as of 2025-10-16,
-    # so we stay with 12.8 for now.
-    "2.9": ["12.8.0"],
+    "2.7": ["12.8"],
+    "2.8": ["12.9"],
+    # TODO(charlie): This should be 12.9, but the build fails as it can't find
+    # `libcupti.so.12` (`cannot open shared object file: No such file or directory`).
+    "2.9": ["12.9", "13.0"],
 }
 
 # The glibc version to use for each PyTorch version, for manylinux builds.
@@ -58,7 +55,6 @@ TORCH_GLIBC_VERSION: dict[str, str] = {
     "2.8": "2_28",
     "2.9": "2_28",
 }
-
 
 AUDITWHEEL_BLANKET_EXCLUDES = [
     "libcuda.so",
