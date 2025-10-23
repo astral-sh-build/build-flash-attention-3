@@ -38,6 +38,9 @@ PYTORCH_CUDA_RANGES: dict[str, tuple[str, str]] = {
 
 # Actual CUDA versions to build against for each PyTorch version.
 PYTORCH_CUDA_VERSIONS: dict[str, list[str]] = {
+    "2.4": ["12.8"],
+    "2.5": ["12.8"],
+    "2.6": ["12.8"],
     "2.7": ["12.8"],
     "2.8": ["12.9"],
     "2.9": ["12.9", "13.0"],
@@ -50,8 +53,8 @@ TORCH_GLIBC_VERSION: dict[str, str] = {
     "2.5": "2_17",
     "2.6": "2_24",
     "2.7": "2_24",
-    "2.8": "2_28",
-    "2.9": "2_28",
+    "2.8": "2_24",
+    "2.9": "2_24",
 }
 
 AUDITWHEEL_BLANKET_EXCLUDES = [
@@ -90,6 +93,9 @@ AUDITWHEEL_CUDA_VERSION_EXCLUDES = {
 
 # CXX11 ABI configuration for each PyTorch version
 TORCH_CXX11_ABI = {
+    "2.4": ["FALSE"],
+    "2.5": ["FALSE"],
+    "2.6": ["FALSE", "TRUE"],
     "2.7": ["TRUE"],
     "2.8": ["TRUE"],
     "2.9": ["TRUE"],
