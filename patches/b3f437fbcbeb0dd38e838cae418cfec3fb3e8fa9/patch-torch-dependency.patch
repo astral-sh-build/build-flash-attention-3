@@ -1,0 +1,13 @@
+diff --git a/hopper/setup.py b/hopper/setup.py
+index 7ed8abc..9e01718 100644
+--- a/hopper/setup.py
++++ b/hopper/setup.py
+@@ -649,7 +649,7 @@ setup(
+     },
+     python_requires=">=3.8",
+     install_requires=[
+-        "torch",
++        f"torch=={TORCH_MAJOR}.{TORCH_MINOR}.*",
+         "einops",
+         "packaging",
+         "ninja",
