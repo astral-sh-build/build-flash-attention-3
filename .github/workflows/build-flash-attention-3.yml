@@ -10,7 +10,7 @@ on:
       FLASH_ATTENTION_3_VERSION:
         description: "FlashAttention-3 version"
         required: true
-        default: "8790c6ec23d4e8270ee3033e512314144800f86b"
+        default: "b3f437fbcbeb0dd38e838cae418cfec3fb3e8fa9"
         type: string
   release:
     types: [created]
@@ -61,16 +61,20 @@ jobs:
         id: flash-attention-3-version
         run: |
           # Extract FlashAttention-3 version from tag. Tags can be either:
-          # - 8790c6ec23d4e8270ee3033e512314144800f86b (legacy format; maps directly to FlashAttention-3 commit)
-          # - 8790c6ec23d4e8270ee3033e512314144800f86b-r1 (new format; strip -rN suffix to get FlashAttention-3 commit)
+          # - b3f437fbcbeb0dd38e838cae418cfec3fb3e8fa9 (legacy format; maps directly to FlashAttention-3 commit)
+          # - b3f437fbcbeb0dd38e838cae418cfec3fb3e8fa9-r1 (new format; strip -rN suffix to get FlashAttention-3 commit)
           if [ "${GITHUB_EVENT_NAME}" = "release" ]; then
             TAG="${GITHUB_REF_NAME}"
             # Remove -rN suffix if present
             FLASH_ATTENTION_3_VERSION="${TAG%-r*}"
+            # Map to a commit hash
+            if [ "${FLASH_ATTENTION_3_VERSION}" = "v2.8.3" ]; then
+              FLASH_ATTENTION_3_VERSION="b3f437fbcbeb0dd38e838cae418cfec3fb3e8fa9"
+            fi
           elif [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
             FLASH_ATTENTION_3_VERSION="${INPUTS_FLASH_ATTENTION_3_VERSION}"
           else
-            FLASH_ATTENTION_3_VERSION="8790c6ec23d4e8270ee3033e512314144800f86b"
+            FLASH_ATTENTION_3_VERSION="b3f437fbcbeb0dd38e838cae418cfec3fb3e8fa9"
           fi
           echo "version=${FLASH_ATTENTION_3_VERSION}" >> $GITHUB_OUTPUT
           echo "Using FlashAttention-3 version: ${FLASH_ATTENTION_3_VERSION}"
