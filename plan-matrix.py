@@ -11,12 +11,12 @@ import os
 from packaging.version import Version
 
 # The minimum CUDA version to build against.
-MIN_CUDA_VERSION = "12.8"
+MIN_CUDA_VERSION = "12.4"
 
 # The architectures to build against.
 ARCH_TORCH_PAIRS = {
-    "x86_64": ["2.7.1", "2.8.0", "2.9.0", "2.10.0"],
-    "aarch64": ["2.7.1", "2.8.0", "2.9.0", "2.10.0"],
+    "x86_64": ["2.5.1", "2.6.0", "2.7.1", "2.8.0", "2.9.0", "2.10.0"],
+    "aarch64": ["2.5.1", "2.6.0", "2.7.1", "2.8.0", "2.9.0", "2.10.0"],
 }
 
 # Supported Python versions for each PyTorch version.
