@@ -15,8 +15,8 @@ MIN_CUDA_VERSION = "12.4"
 
 # The architectures to build against.
 ARCH_TORCH_PAIRS = {
-    "x86_64": ["2.5.1", "2.6.0", "2.7.1", "2.8.0", "2.9.0", "2.10.0"],
-    "aarch64": ["2.5.1", "2.6.0", "2.7.1", "2.8.0", "2.9.0", "2.10.0"],
+    "x86_64": ["2.4.1", "2.5.1", "2.6.0", "2.7.1", "2.8.0", "2.9.0", "2.10.0"],
+    "aarch64": ["2.6.0", "2.7.1", "2.8.0", "2.9.0", "2.10.0"],
 }
 
 # Supported Python versions for each PyTorch version.
@@ -49,7 +49,7 @@ PYTORCH_CUDA_VERSIONS: dict[tuple[str, str], list[str]] = {
     ("2.4", "aarch64"): ["12.4"],
     ("2.5", "x86_64"): ["12.1", "12.4"],
     ("2.5", "aarch64"): ["12.4"],
-    ("2.6", "x86_64"): ["12.4"],
+    ("2.6", "x86_64"): ["12.4", "12.6"],
     ("2.6", "aarch64"): ["12.6"],
     ("2.7", "x86_64"): ["12.6", "12.8"],
     ("2.7", "aarch64"): ["12.8"],
@@ -60,6 +60,10 @@ PYTORCH_CUDA_VERSIONS: dict[tuple[str, str], list[str]] = {
     ("2.10", "x86_64"): ["12.6", "12.8", "12.9", "13.0"],
     ("2.10", "aarch64"): ["12.6", "12.8", "12.9", "13.0"],
 }
+
+# CUDA versions to skip. The PyTorch Docker images for CUDA 12.6 ship a ptxas
+# that segfaults when compiling sm_90a (Hopper) kernels.
+SKIP_CUDA_VERSIONS = {"12.6"}
 
 # The glibc version to use for each PyTorch version, for manylinux builds.
 # See: https://github.com/pytorch/pytorch/blob/main/RELEASE.md#release-compatibility-matrix
@@ -137,6 +141,9 @@ def main() -> None:
                 cuda_version_parsed = Version(cuda_version)
 
                 if cuda_version_parsed < Version(MIN_CUDA_VERSION):
+                    continue
+
+                if cuda_version in SKIP_CUDA_VERSIONS:
                     continue
 
                 # The CXX11 ABI became the default in PyTorch 2.7.0, but was also used in
