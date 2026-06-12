@@ -1,3 +1,70 @@
 # build-flash-attention-3
 
-Build Flash Attention 3 wheels for multiple versions of PyTorch and CUDA.
+Pre-built Linux wheels for [FlashAttention-3](https://github.com/Dao-AILab/flash-attention), fast
+and memory-efficient attention kernels optimized for NVIDIA Hopper GPUs, across Python, PyTorch,
+CUDA, and CPU architectures.
+
+## Installation
+
+Following the PyTorch convention, artifacts are published to a separate index for each CUDA
+version. Each ABI3 wheel has a local version suffix that identifies the CUDA and PyTorch versions it
+was built against, such as `flash-attn-3==3.0.0b1+cu.12.8.torch.2.10`, and requires the matching
+PyTorch minor release.
+
+Pre-built wheels are available on [Astral's GPU indexes](https://pub-ca5ccdc72d7a4f9e9f2af5929bdf5083.r2.dev/index.html).
+For example, to install a CUDA 12.8 build:
+
+```console
+$ uv add flash-attn-3 --index astral-cu128=https://pub-ca5ccdc72d7a4f9e9f2af5929bdf5083.r2.dev/simple/cu128/
+```
+
+This configures the index and uses it as the source for `flash-attn-3`:
+
+```toml
+[tool.uv.sources]
+flash-attn-3 = { index = "astral-cu128" }
+
+[[tool.uv.index]]
+name = "astral-cu128"
+url = "https://pub-ca5ccdc72d7a4f9e9f2af5929bdf5083.r2.dev/simple/cu128/"
+```
+
+Or, with `uv pip`:
+
+```console
+$ uv pip install --index https://pub-ca5ccdc72d7a4f9e9f2af5929bdf5083.r2.dev/simple/cu128/ flash-attn-3
+```
+
+## Supported versions
+
+Wheels are available for the following `flash-attn-3` versions:
+
+- [`3.0.0b1`](https://github.com/astral-sh-build/build-flash-attention-3/releases/tag/v2.8.3-r6),
+  built from FlashAttention source revision
+  [`b3f437fb`](https://github.com/Dao-AILab/flash-attention/commit/b3f437fbcbeb0dd38e838cae418cfec3fb3e8fa9)
+
+The latest build release, `v2.8.3-r6`, publishes FlashAttention-3 3.0.0b1 for the following
+combinations:
+
+| PyTorch | Python    | `x86_64` CUDA    | `aarch64` CUDA   |
+| ------- | --------- | ---------------- | ---------------- |
+| 2.4.1   | 3.9–3.12  | 12.4             | —                |
+| 2.5.1   | 3.9–3.12  | 12.4             | —                |
+| 2.6.0   | 3.9–3.12  | 12.4             | —                |
+| 2.7.1   | 3.9–3.13  | 12.8             | 12.8             |
+| 2.8.0   | 3.9–3.13  | 12.8, 12.9       | 12.9             |
+| 2.9.0   | 3.10–3.14 | 12.8, 12.9, 13.0 | 12.8, 12.9, 13.0 |
+| 2.10.0  | 3.10–3.14 | 12.8, 12.9, 13.0 | 12.8, 12.9, 13.0 |
+
+The wheels target Hopper's SM90a instruction set. CUDA 12.6 builds are intentionally omitted
+because the `ptxas` bundled in the PyTorch build image crashes while compiling SM90a kernels.
+
+## License
+
+build-flash-attention-3 is licensed under the [Apache License, Version 2.0](LICENSE).
+
+<div align="center">
+  <a target="_blank" href="https://astral.sh" style="background:none">
+    <img src="https://raw.githubusercontent.com/astral-sh/ruff/main/assets/svg/Astral.svg" alt="Made by Astral">
+  </a>
+</div>
