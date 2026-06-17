@@ -11,11 +11,11 @@ version. Each ABI3 wheel has a local version suffix that identifies the CUDA and
 was built against, such as `flash-attn-3==3.0.0b1+cu.12.8.torch.2.10`, and requires the matching
 PyTorch minor release.
 
-Pre-built wheels are available on [Astral's GPU indexes](https://wheels.astralshosted.com/index.html).
+Pre-built wheels are available on [Astral's GPU indexes](https://wheels.astralhosted.com/index.html).
 For example, to install a CUDA 12.8 build:
 
 ```console
-$ uv add flash-attn-3 --index astral-cu128=https://wheels.astralshosted.com/simple/cu128/
+$ uv add flash-attn-3 --index astral-cu128=https://wheels.astralhosted.com/simple/cu128/
 ```
 
 This configures the index and uses it as the source for `flash-attn-3`:
@@ -26,13 +26,13 @@ flash-attn-3 = { index = "astral-cu128" }
 
 [[tool.uv.index]]
 name = "astral-cu128"
-url = "https://wheels.astralshosted.com/simple/cu128/"
+url = "https://wheels.astralhosted.com/simple/cu128/"
 ```
 
 Or, with `uv pip`:
 
 ```console
-$ uv pip install --index https://wheels.astralshosted.com/simple/cu128/ flash-attn-3
+$ uv pip install --index https://wheels.astralhosted.com/simple/cu128/ flash-attn-3
 ```
 
 ## Supported versions
