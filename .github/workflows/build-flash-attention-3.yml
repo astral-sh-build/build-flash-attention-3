@@ -67,7 +67,7 @@ jobs:
           if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
             TAG="${INPUTS_RELEASE_TAG}"
             # Remove -rN suffix if present
-            FLASH_ATTENTION_3_VERSION=$(printf '%s\\n' "${TAG}" | sed -E 's/-r[0-9]+$//')
+            FLASH_ATTENTION_3_VERSION=$(sed -E 's/-r[0-9]+$//' <<<"${TAG}")
             # Map to a commit hash
             if [ "${FLASH_ATTENTION_3_VERSION}" = "v2.8.3" ]; then
               FLASH_ATTENTION_3_VERSION="b3f437fbcbeb0dd38e838cae418cfec3fb3e8fa9"
