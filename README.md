@@ -57,6 +57,7 @@ combinations:
 | 2.10.0  | 3.10–3.14 | 12.8, 12.9, 13.0 | 12.8, 12.9, 13.0 |
 | 2.11.0  | 3.10–3.14 | 12.8, 12.9, 13.0 | 12.8, 12.9, 13.0 |
 | 2.12.1  | 3.10–3.14 | 13.0, 13.2       | 13.0, 13.2       |
+| 2.13.0  | 3.10–3.15 | 13.0, 13.2       | 13.0, 13.2       |
 
 The wheels target Hopper's SM90a instruction set. CUDA 12.6 builds are intentionally omitted
 because the `ptxas` bundled in the PyTorch build image crashes while compiling SM90a kernels.
