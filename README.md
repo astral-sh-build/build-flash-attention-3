@@ -1,18 +1,21 @@
 # build-flash-attention-3
 
-Pre-built Linux wheels for [FlashAttention-3](https://github.com/Dao-AILab/flash-attention), fast
-and memory-efficient attention kernels optimized for NVIDIA Hopper GPUs, across Python, PyTorch,
-CUDA, and CPU architectures.
+Pre-built Linux wheels for
+[FlashAttention-3](https://github.com/Dao-AILab/flash-attention), fast and
+memory-efficient attention kernels optimized for NVIDIA Hopper GPUs, across
+Python, PyTorch, CUDA, and CPU architectures.
 
 ## Installation
 
-Following the PyTorch convention, artifacts are published to a separate index for each CUDA
-version. Each ABI3 wheel has a local version suffix that identifies the CUDA and PyTorch versions it
-was built against, such as `flash-attn-3==3.0.0b1+cu.12.8.torch.2.10`, and requires the matching
-PyTorch minor release.
+Following the PyTorch convention, artifacts are published to a separate index
+for each CUDA version. Each ABI3 wheel has a local version suffix that
+identifies the CUDA and PyTorch versions it was built against, such as
+`flash-attn-3==3.0.0b1+cu.12.8.torch.2.10`, and requires the matching PyTorch
+minor release.
 
-Pre-built wheels are available on [Astral's GPU indexes](https://wheels.astral.sh/index.html).
-For example, to install a CUDA 12.8 build:
+Pre-built wheels are available on
+[Astral's GPU indexes](https://wheels.astral.sh/index.html). For example, to
+install a CUDA 12.8 build:
 
 ```console
 $ uv add flash-attn-3 --index astral-cu128=https://wheels.astral.sh/simple/cu128/
@@ -37,8 +40,9 @@ $ uv pip install --index https://wheels.astral.sh/simple/cu128/ flash-attn-3
 
 ## GPU tests
 
-The `tests/` directory contains a locked uv project that installs the published CUDA 12.8 wheel from the Astral index
-alongside its matching CUDA-enabled PyTorch build. Run the tests on a Modal GPU with:
+The `tests/` directory contains a locked uv project that installs the published
+CUDA 12.8 wheel from the Astral index alongside its matching CUDA-enabled
+PyTorch build. Run the tests on a Modal GPU with:
 
 ```console
 $ modal run tests/modal_app.py
@@ -55,8 +59,8 @@ Wheels are available for the following `flash-attn-3` versions:
   built from FlashAttention source revision
   [`b3f437fb`](https://github.com/Dao-AILab/flash-attention/commit/b3f437fbcbeb0dd38e838cae418cfec3fb3e8fa9)
 
-The latest build release, `v2.8.3-r6`, publishes FlashAttention-3 3.0.0b1 for the following
-combinations:
+The latest build release, `v2.8.3-r6`, publishes FlashAttention-3 3.0.0b1 for
+the following combinations:
 
 | PyTorch | Python    | `x86_64` CUDA    | `aarch64` CUDA   |
 | ------- | --------- | ---------------- | ---------------- |
@@ -69,13 +73,17 @@ combinations:
 | 2.10.0  | 3.10–3.14 | 12.8, 12.9, 13.0 | 12.8, 12.9, 13.0 |
 | 2.11.0  | 3.10–3.14 | 12.8, 12.9, 13.0 | 12.8, 12.9, 13.0 |
 | 2.12.1  | 3.10–3.14 | 13.0, 13.2       | 13.0, 13.2       |
+| 2.13.0  | 3.10–3.15 | 12.6, 13.0, 13.2 | 12.6, 13.0, 13.2 |
+| 2.14.1  | 3.10–3.15 | 12.6, 13.0, 13.2 | 12.6, 13.0, 13.2 |
 
-The wheels target Hopper's SM90a instruction set. CUDA 12.6 builds are intentionally omitted
-because the `ptxas` bundled in the PyTorch build image crashes while compiling SM90a kernels.
+The wheels target Hopper's SM90a instruction set. CUDA 12.6 builds are
+intentionally omitted because the `ptxas` bundled in the PyTorch build image
+crashes while compiling SM90a kernels.
 
 ## License
 
-build-flash-attention-3 is licensed under the [Apache License, Version 2.0](LICENSE).
+build-flash-attention-3 is licensed under the
+[Apache License, Version 2.0](LICENSE).
 
 <div align="center">
   <a target="_blank" href="https://astral.sh" style="background:none">

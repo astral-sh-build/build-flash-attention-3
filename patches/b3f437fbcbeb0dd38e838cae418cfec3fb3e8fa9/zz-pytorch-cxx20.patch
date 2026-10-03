@@ -1,0 +1,20 @@
+--- a/hopper/setup.py
++++ b/hopper/setup.py
+@@ -516,7 +516,7 @@
+     sources += ["flash_prepare_scheduler.cu"]
+     nvcc_flags = [
+         "-O3",
+-        "-std=c++17",
++        ("-std=c++20" if tuple(map(int, torch.__version__.split(".")[:2])) >= (2, 13) else "-std=c++17"),
+         "--ftemplate-backtrace-limit=0",  # To debug template code
+         "--use_fast_math",
+         # "--keep",
+@@ -546,7 +546,7 @@
+             name=f"{PACKAGE_NAME}._C",
+             sources=sources,
+             extra_compile_args={
+-                "cxx": ["-O3", "-std=c++17", "-DPy_LIMITED_API=0x03090000"] + stable_args + feature_args,
++                "cxx": ["-O3", ("-std=c++20" if tuple(map(int, torch.__version__.split(".")[:2])) >= (2, 13) else "-std=c++17"), "-DPy_LIMITED_API=0x03090000"] + stable_args + feature_args,
+                 "nvcc": nvcc_threads_args() + nvcc_flags + cc_flag + feature_args,
+             },
+             include_dirs=include_dirs,
